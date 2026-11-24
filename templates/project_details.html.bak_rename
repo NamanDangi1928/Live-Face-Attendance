@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Eye-X | Technical Documentation</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #23d300;
+            --primary-dark: #1db100;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --bg-light: #f8fafc;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #fff;
+            color: var(--text-main);
+            line-height: 1.7;
+        }
+
+        .bg-mesh {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            z-index: -1;
+            background: radial-gradient(circle at 0% 0%, rgba(35, 211, 0, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(35, 211, 0, 0.05) 0%, transparent 50%);
+        }
+
+        nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+
+        .nav-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: var(--text-main);
+        }
+
+        .logo span {
+            color: var(--primary);
+        }
+
+        .btn-back {
+            background: white;
+            border: 1px solid var(--border);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .btn-back:hover {
+            border-color: var(--primary);
+            color: var(--primary);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            letter-spacing: -0.03em;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        header p {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        section {
+            margin-bottom: 5rem;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        p {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 1rem;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        @media (max-width: 900px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        .card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        .chart-box {
+            height: 300px;
+            position: relative;
+        }
+
+        pre {
+            background: #0f172a;
+            color: #f1f5f9;
+            padding: 1.5rem;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        .code-comment {
+            color: #22c55e;
+        }
+
+        .code-keyword {
+            color: #60a5fa;
+        }
+
+        .code-string {
+            color: #fbbf24;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: var(--bg-light);
+            font-weight: 600;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .flow-diagram {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            padding: 2rem;
+            background: var(--bg-light);
+            border-radius: 12px;
+            margin: 1rem 0;
+        }
+
+        .flow-step {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-weight: 600;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .flow-step.active {
+            border-color: var(--primary);
+            background: rgba(35, 211, 0, 0.05);
+            color: var(--primary-dark);
+        }
+
+        .flow-arrow {
+            color: #94a3b8;
+            font-size: 1.5rem;
+        }
+
+        .tech-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .tech-item {
+            background: var(--bg-light);
+            padding: 1.25rem;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .tech-item strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            color: var(--primary-dark);
+        }
+
+        .algo-box {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+
+        .algo-header {
+            background: var(--bg-light);
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .algo-content {
+            padding: 1.5rem;
+        }
+
+        .stat-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        @media (max-width: 900px) {
+            .stat-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .stat-card {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            color: var(--primary-dark);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-mesh"></div>
+
+    <nav>
+        <div class="nav-content">
+            <a href="/" class="logo">Eye-X <span>Technical Docs</span></a>
+            <a href="/dashboard" class="btn-back">← Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header>
+            <h1>System Architecture</h1>
+            <p>Complete technical documentation of the Eye-X Smart Attendance System. Edge-first AI processing with
+                real-time WebSocket communication.</p>
+        </header>
+
+        <!-- 1. Technology Stack -->
+        <section>
+            <h2>1. Technology Stack</h2>
+            <div class="tech-grid">
+                <div class="tech-item"><strong>FastAPI</strong>Python Web Framework</div>
+                <div class="tech-item"><strong>MongoDB Atlas</strong>NoSQL Database</div>
+                <div class="tech-item"><strong>YuNet DNN</strong>Face Detection</div>
+                <div class="tech-item"><strong>SFace DNN</strong>Face Recognition</div>
+                <div class="tech-item"><strong>YOLOv8-Pose</strong>Behavior Detection</div>
+                <div class="tech-item"><strong>WebSocket</strong>Real-time Comm</div>
+            </div>
+
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-value">1,265</div>
+                    <div class="stat-label">Lines in app.py</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">885</div>
+                    <div class="stat-label">Lines in mongodb.py</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">128D</div>
+                    <div class="stat-label">Face Embedding Size</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">~180ms</div>
+                    <div class="stat-label">End-to-End Latency</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. System Architecture -->
+        <section>
+            <h2>2. System Data Flow</h2>
+            <div class="flow-diagram">
+                <div class="flow-step active"> Camera<br><small>Capture Frame</small></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">🔌 WebSocket<br><small>Base64 JPEG</small></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step active">🧠 AI Server<br><small>Detect + Recognize</small></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">🗄️ MongoDB<br><small>Save Attendance</small></div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step active"> Dashboard<br><small>Real-time Update</small></div>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Component Distribution</h3>
+                    <div class="chart-box"><canvas id="archChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Processing Pipeline</h3>
+                    <div class="chart-box"><canvas id="pipelineChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Face Detection -->
+        <section>
+            <h2>3. Face Detection (YuNet)</h2>
+            <div class="grid-2">
+                <div>
+                    <p><strong>YuNet</strong> is a lightweight CNN optimized for real-time face detection. It outputs
+                        bounding boxes and 5 facial landmarks per face.</p>
+
+                    <div class="algo-box">
+                        <div class="algo-header">Algorithm Steps</div>
+                        <div class="algo-content">
+                            <ol style="margin-left: 1.5rem; line-height: 2;">
+                                <li><strong>Preprocessing:</strong> Resize input to 320×320</li>
+                                <li><strong>CNN Forward Pass:</strong> Multi-scale feature pyramid</li>
+                                <li><strong>Confidence Filter:</strong> Keep detections > 0.7</li>
+                                <li><strong>NMS:</strong> Remove overlaps (IoU threshold: 0.3)</li>
+                                <li><strong>Output:</strong> Bounding box + 5 landmarks</li>
+                            </ol>
+                        </div>
+                    </div>
+
+                    <table>
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr>
+                            <td>Input Size</td>
+                            <td>320 × 320 pixels</td>
+                        </tr>
+                        <tr>
+                            <td>Score Threshold</td>
+                            <td>0.7</td>
+                        </tr>
+                        <tr>
+                            <td>NMS Threshold</td>
+                            <td>0.3</td>
+                        </tr>
+                        <tr>
+                            <td>Landmarks</td>
+                            <td>Eyes, Nose, Mouth corners</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>YuNet Output Format</h3>
+                    <pre><span class="code-comment"># Each detection contains 15 values:</span>
+face = [
+    x, y, width, height,  <span class="code-comment"># Bounding box</span>
+    right_eye_x, right_eye_y,
+    left_eye_x, left_eye_y,
+    nose_x, nose_y,
+    right_mouth_x, right_mouth_y,
+    left_mouth_x, left_mouth_y,
+    confidence_score  <span class="code-comment"># 0.0 to 1.0</span>
+]</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Face Recognition -->
+        <section>
+            <h2>4. Face Recognition (SFace)</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Embedding Extraction</h3>
+                    <pre><span class="code-keyword">def</span> compute_embedding(face_image):
+    <span class="code-comment"># Resize to model input size</span>
+    face = cv2.resize(face_image, (112, 112))
+    
+    <span class="code-comment"># Extract 128D feature vector</span>
+    embedding = recognizer.feature(face)
+    
+    <span class="code-comment"># L2 Normalize for cosine similarity</span>
+    embedding = embedding / np.linalg.norm(embedding)
+    
+    <span class="code-keyword">return</span> embedding  <span class="code-comment"># Shape: (128,)</span></pre>
+                </div>
+                <div class="card">
+                    <h3>Recognition Algorithm</h3>
+                    <pre><span class="code-keyword">def</span> recognize(query_embedding):
+    <span class="code-comment"># Vectorized comparison with ALL students</span>
+    <span class="code-comment"># embedding_matrix: (N_students, 128)</span>
+    similarities = np.dot(
+        embedding_matrix,
+        query_embedding
+    )
+    
+    <span class="code-comment"># Find best match</span>
+    best_idx = np.argmax(similarities)
+    best_score = similarities[best_idx]
+    
+    <span class="code-comment"># Threshold check</span>
+    <span class="code-keyword">if</span> best_score > <span class="code-string">0.40</span>:
+        <span class="code-keyword">return</span> students[best_idx]
+    <span class="code-keyword">return</span> None  <span class="code-comment"># Unknown</span></pre>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="card">
+                    <h3>Similarity Distribution</h3>
+                    <div class="chart-box"><canvas id="similarityChart"></canvas></div>
+                </div>
+                <div class="card">
+                    <h3>Cosine Similarity</h3>
+                    <div
+                        style="padding: 1rem; background: var(--bg-light); border-radius: 8px; text-align: center; margin-bottom: 1rem;">
+                        <strong style="font-size: 1.2rem;">Similarity = A · B = Σ(Aᵢ × Bᵢ)</strong>
+                    </div>
+                    <table>
+                        <tr>
+                            <th>Score</th>
+                            <th>Meaning</th>
+                        </tr>
+                        <tr>
+                            <td style="color: #22c55e; font-weight: 700;">1.0</td>
+                            <td>Identical (same person)</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #22c55e; font-weight: 700;">> 0.4</td>
+                            <td>Above threshold → MATCH</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #f59e0b; font-weight: 700;">0.2 - 0.4</td>
+                            <td>Similar but uncertain</td>
+                        </tr>
+                        <tr>
+                            <td style="color: #ef4444; font-weight: 700;">
+                                < 0.2</td>
+                            <td>Different person</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Behavior Detection -->
+        <section>
+            <h2>5. Behavior Detection (YOLOv8-Pose)</h2>
+            <div class="grid-2">
+                <div>
+                    <p><strong>YOLOv8-Pose</strong> detects 17 body keypoints per person. We analyze head-shoulder
+                        geometry to classify behavior.</p>
+
+                    <div class="algo-box">
+                        <div class="algo-header">Classification Rules</div>
+                        <div class="algo-content">
+                            <pre style="background: transparent; color: inherit; padding: 0;"><span class="code-keyword">if</span> nose_y > shoulder_mid_y + 20:
+    <span class="code-keyword">return</span> <span class="code-string">"sleeping"</span>  <span class="code-comment"># Head dropped</span>
+
+<span class="code-keyword">elif</span> head_offset / shoulder_width > 0.4:
+    <span class="code-keyword">return</span> <span class="code-string">"distracted"</span>  <span class="code-comment"># Looking away</span>
+
+<span class="code-keyword">elif</span> hands_below_shoulders:
+    <span class="code-keyword">return</span> <span class="code-string">"studying"</span>  <span class="code-comment"># Writing</span>
+
+<span class="code-keyword">else</span>:
+    <span class="code-keyword">return</span> <span class="code-string">"focused"</span></pre>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Behavior Categories</h3>
+                    <div class="chart-box"><canvas id="behaviorChart"></canvas></div>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="card">
+                    <h3>COCO Keypoint Map</h3>
+                    <table>
+                        <tr>
+                            <th>Index</th>
+                            <th>Keypoint</th>
+                            <th>Use</th>
+                        </tr>
+                        <tr>
+                            <td>0</td>
+                            <td>Nose</td>
+                            <td>Head position</td>
+                        </tr>
+                        <tr>
+                            <td>5, 6</td>
+                            <td>Shoulders</td>
+                            <td>Reference line</td>
+                        </tr>
+                        <tr>
+                            <td>9, 10</td>
+                            <td>Wrists</td>
+                            <td>Writing detection</td>
+                        </tr>
+                        <tr>
+                            <td>1, 2</td>
+                            <td>Eyes</td>
+                            <td>Gaze direction</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>Detection Thresholds</h3>
+                    <div class="chart-box"><canvas id="thresholdChart"></canvas></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Database Schema -->
+        <section>
+            <h2>6. MongoDB Collections</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>students</h3>
+                    <pre>{
+  <span class="code-string">"_id"</span>: ObjectId(<span class="code-string">"..."</span>),
+  <span class="code-string">"name"</span>: <span class="code-string">"John Doe"</span>,
+  <span class="code-string">"roll_number"</span>: <span class="code-string">"CS2024001"</span>,
+  <span class="code-string">"email"</span>: <span class="code-string">"john@college.edu"</span>,
+  <span class="code-string">"face_embeddings"</span>: [
+    [0.12, -0.45, 0.78, ...]  <span class="code-comment">// 128 floats</span>
+  ],
+  <span class="code-string">"is_active"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"created_at"</span>: ISODate(<span class="code-string">"..."</span>)
+}</pre>
+                </div>
+                <div class="card">
+                    <h3>attendance</h3>
+                    <pre>{
+  <span class="code-string">"_id"</span>: ObjectId(<span class="code-string">"..."</span>),
+  <span class="code-string">"student_id"</span>: ObjectId(<span class="code-string">"..."</span>),
+  <span class="code-string">"date"</span>: <span class="code-string">"2026-02-08"</span>,
+  <span class="code-string">"check_in_time"</span>: ISODate(<span class="code-string">"..."</span>),
+  <span class="code-string">"status"</span>: <span class="code-string">"present"</span>,
+  <span class="code-string">"detection_confidence"</span>: 0.847,
+  <span class="code-string">"auto_detected"</span>: <span class="code-keyword">true</span>,
+  <span class="code-string">"camera"</span>: <span class="code-string">"gate"</span>
+}</pre>
+                </div>
+            </div>
+
+            <div class="grid-2" style="margin-top: 1rem;">
+                <div class="card">
+                    <h3>behavior_logs</h3>
+                    <pre>{
+  <span class="code-string">"timestamp"</span>: ISODate(<span class="code-string">"..."</span>),
+  <span class="code-string">"date"</span>: <span class="code-string">"2026-02-08"</span>,
+  <span class="code-string">"stats"</span>: {
+    <span class="code-string">"total_detected"</span>: 45,
+    <span class="code-string">"attentive"</span>: 38,
+    <span class="code-string">"distracted"</span>: 5,
+    <span class="code-string">"sleeping"</span>: 2
+  }
+}</pre>
+                </div>
+                <div class="card">
+                    <h3>Database Indexes</h3>
+                    <pre><span class="code-comment">// Fast student lookup</span>
+db.students.createIndex(
+  { <span class="code-string">"roll_number"</span>: 1 }, 
+  { unique: <span class="code-keyword">true</span> }
+)
+
+<span class="code-comment">// Attendance queries</span>
+db.attendance.createIndex({
+  <span class="code-string">"student_id"</span>: 1, 
+  <span class="code-string">"date"</span>: -1
+})
+
+<span class="code-comment">// Time-series logs</span>
+db.behavior_logs.createIndex({
+  <span class="code-string">"timestamp"</span>: -1
+})</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. WebSocket Protocol -->
+        <section>
+            <h2>7. WebSocket Protocol</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Camera → Server</h3>
+                    <pre><span class="code-comment">// Gate camera frame</span>
+{
+  <span class="code-string">"type"</span>: <span class="code-string">"process_frame"</span>,
+  <span class="code-string">"frame"</span>: <span class="code-string">"data:image/jpeg;base64,..."</span>,
+  <span class="code-string">"timestamp"</span>: <span class="code-string">"2026-02-08T08:25:30Z"</span>
+}
+
+<span class="code-comment">// Classroom camera</span>
+{
+  <span class="code-string">"type"</span>: <span class="code-string">"classroom_snapshot"</span>,
+  <span class="code-string">"frame"</span>: <span class="code-string">"data:image/jpeg;base64,..."</span>,
+  <span class="code-string">"timestamp"</span>: <span class="code-string">"2026-02-08T09:15:00Z"</span>
+}</pre>
+                </div>
+                <div class="card">
+                    <h3>Server → Dashboard</h3>
+                    <pre><span class="code-comment">// Gate snapshot result</span>
+{
+  <span class="code-string">"type"</span>: <span class="code-string">"gate_snapshot"</span>,
+  <span class="code-string">"image"</span>: <span class="code-string">"/9j/4AAQ..."</span>,
+  <span class="code-string">"face_count"</span>: 3,
+  <span class="code-string">"names"</span>: [<span class="code-string">"John"</span>, <span class="code-string">"Jane"</span>, <span class="code-string">"Unknown"</span>]
+}
+
+<span class="code-comment">// Attendance notification</span>
+{
+  <span class="code-string">"type"</span>: <span class="code-string">"new_attendance"</span>,
+  <span class="code-string">"name"</span>: <span class="code-string">"John Doe"</span>,
+  <span class="code-string">"status"</span>: <span class="code-string">"present"</span>,
+  <span class="code-string">"confidence"</span>: 0.92
+}</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. File Structure -->
+        <section>
+            <h2>8. Project Structure</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Backend Files</h3>
+                    <table>
+                        <tr>
+                            <th>File</th>
+                            <th>Lines</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td><code>app.py</code></td>
+                            <td>1,265</td>
+                            <td>FastAPI routes, WebSocket</td>
+                        </tr>
+                        <tr>
+                            <td><code>config.py</code></td>
+                            <td>63</td>
+                            <td>Configuration settings</td>
+                        </tr>
+                        <tr>
+                            <td><code>mongodb.py</code></td>
+                            <td>885</td>
+                            <td>Database operations</td>
+                        </tr>
+                        <tr>
+                            <td><code>face_detector.py</code></td>
+                            <td>305</td>
+                            <td>YuNet detection</td>
+                        </tr>
+                        <tr>
+                            <td><code>face_recognizer.py</code></td>
+                            <td>309</td>
+                            <td>SFace recognition</td>
+                        </tr>
+                        <tr>
+                            <td><code>behavior_detector.py</code></td>
+                            <td>287</td>
+                            <td>YOLOv8 behavior</td>
+                        </tr>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>Frontend Files</h3>
+                    <table>
+                        <tr>
+                            <th>File</th>
+                            <th>Lines</th>
+                            <th>Purpose</th>
+                        </tr>
+                        <tr>
+                            <td><code>dashboard.js</code></td>
+                            <td>361</td>
+                            <td>Dashboard logic</td>
+                        </tr>
+                        <tr>
+                            <td><code>webrtc-client.js</code></td>
+                            <td>349</td>
+                            <td>Camera streaming</td>
+                        </tr>
+                        <tr>
+                            <td><code>webrtc-viewer.js</code></td>
+                            <td>222</td>
+                            <td>Video receiver</td>
+                        </tr>
+                        <tr>
+                            <td><code>modern.css</code></td>
+                            <td>506</td>
+                            <td>UI styling</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. Interview Q&A -->
+        <section>
+            <h2>9. Interview Questions</h2>
+            <div class="grid-2">
+                <div class="card">
+                    <h3>Architecture</h3>
+                    <p><strong>Q: Why FastAPI over Flask?</strong><br>
+                        <span style="color: var(--text-muted);">Native async/await, auto-documentation, type hints, 2-3x
+                            faster.</span>
+                    </p>
+
+                    <p><strong>Q: Why WebSocket vs HTTP?</strong><br>
+                        <span style="color: var(--text-muted);">Persistent connection, bidirectional, low latency
+                            (~180ms).</span>
+                    </p>
+
+                    <p><strong>Q: Why MongoDB?</strong><br>
+                        <span style="color: var(--text-muted);">Native array storage for embeddings, flexible schema,
+                            horizontal scaling.</span>
+                    </p>
+                </div>
+                <div class="card">
+                    <h3>AI & Computer Vision</h3>
+                    <p><strong>Q: What is a face embedding?</strong><br>
+                        <span style="color: var(--text-muted);">128D vector representing facial features. Similar faces
+                            = similar vectors.</span>
+                    </p>
+
+                    <p><strong>Q: What is NMS?</strong><br>
+                        <span style="color: var(--text-muted);">Non-Max Suppression removes duplicate overlapping
+                            detections.</span>
+                    </p>
+
+                    <p><strong>Q: How is behavior detected?</strong><br>
+                        <span style="color: var(--text-muted);">YOLOv8-pose keypoints → head-shoulder geometry →
+                            classify state.</span>
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <footer>
+            <p>&copy; 2026 Eye-X Engineering Team</p>
+            <p style="font-size: 0.9rem; margin-top: 0.5rem;">Full documentation:
+                <code>/TECHNICAL_DOCUMENTATION.md</code>
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = '#64748b';
+
+        // 1. Architecture Distribution
+        new Chart(document.getElementById('archChart'), {
+            type: 'doughnut',
+            data: {
+                labels: ['AI Processing', 'WebSocket Comm', 'Database Ops', 'Frontend'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: ['#23d300', '#3b82f6', '#f59e0b', '#8b5cf6'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '65%',
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // 2. Processing Pipeline
+        new Chart(document.getElementById('pipelineChart'), {
+            type: 'bar',
+            data: {
+                labels: ['Capture', 'Detect', 'Recognize', 'Store', 'Broadcast'],
+                datasets: [{
+                    label: 'Time (ms)',
+                    data: [10, 45, 35, 15, 5],
+                    backgroundColor: '#23d300',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                plugins: { legend: { display: false } }
+            }
+        });
+
+        // 3. Similarity Distribution
+        new Chart(document.getElementById('similarityChart'), {
+            type: 'line',
+            data: {
+                labels: ['0.0', '0.2', '0.4', '0.6', '0.8', '1.0'],
+                datasets: [{
+                    label: 'Same Person',
+                    data: [0, 2, 15, 45, 85, 100],
+                    borderColor: '#23d300',
+                    backgroundColor: 'rgba(35, 211, 0, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }, {
+                    label: 'Different Person',
+                    data: [100, 60, 20, 5, 1, 0],
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } },
+                scales: { y: { title: { display: true, text: 'Probability %' } } }
+            }
+        });
+
+        // 4. Behavior Categories
+        new Chart(document.getElementById('behaviorChart'), {
+            type: 'pie',
+            data: {
+                labels: ['Studying', 'Focused', 'Distracted', 'Sleeping'],
+                datasets: [{
+                    data: [35, 45, 15, 5],
+                    backgroundColor: ['#23d300', '#3b82f6', '#f59e0b', '#ef4444'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+
+        // 5. Detection Thresholds
+        new Chart(document.getElementById('thresholdChart'), {
+            type: 'radar',
+            data: {
+                labels: ['Head Drop', 'Head Turn', 'Hand Position', 'Eye Contact', 'Posture'],
+                datasets: [{
+                    label: 'Threshold Values',
+                    data: [25, 40, 50, 35, 45],
+                    backgroundColor: 'rgba(35, 211, 0, 0.2)',
+                    borderColor: '#23d300',
+                    pointBackgroundColor: '#23d300'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } }
+            }
+        });
+    </script>
+</body>
+
+</html>

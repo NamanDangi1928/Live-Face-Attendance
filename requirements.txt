@@ -1,0 +1,28 @@
+# Smart Attendance System (EYE-X) - Dependencies
+
+# Core Framework
+fastapi>=0.104.0
+uvicorn[standard]>=0.24.0
+python-multipart>=0.0.6
+
+# WebSocket & Real-time
+websockets>=12.0
+
+# Computer Vision & AI
+opencv-contrib-python>=4.8.0
+ultralytics>=8.0.0
+numpy>=1.24.0
+
+# Database (MongoDB Atlas)
+motor>=3.3.0
+
+# Audio Announcements
+pyttsx3>=2.90
+
+# Excel Export
+openpyxl>=3.1.0
+
+# Utilities
+aiofiles>=23.2.0
+jinja2>=3.1.0
+python-dotenv>=1.0.0

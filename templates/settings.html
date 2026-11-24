@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Live Face Recognition Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/modern.css">
+    <script>
+        // Init Theme
+        const storedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+    </script>
+    <style>
+        .settings-card {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-xl);
+            padding: var(--spacing-xl);
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-card);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .form-group {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: var(--spacing-sm);
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2);
+        }
+
+        .theme-toggle-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md);
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(26px);
+        }
+
+        .schedule-input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-pattern"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-logo">
+            <img src="/static/images/logo.svg" alt="Live Face Recognition Attendance">
+        </div>
+        <a href="/dashboard" class="nav-link"><span>Dashboard</span></a>
+        <a href="/add-students" class="nav-link"><span>Add Students</span></a>
+        <a href="/analysis" class="nav-link"><span>Analysis</span></a>
+        <a href="/data" class="nav-link"><span>Data</span></a>
+        <a href="/settings" class="nav-link active"><span>Settings</span></a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-content">
+        <div class="page-header">
+            <h1 class="page-title">Settings</h1>
+            <p style="color: var(--text-secondary); margin-top: var(--spacing-sm);">
+                Configure application preferences
+            </p>
+        </div>
+
+        <div class="settings-card">
+            <h2 class="section-title" style="margin-bottom: 20px;">Appearance</h2>
+            <div class="theme-toggle-container">
+                <span class="form-label" style="margin:0">Dark Mode</span>
+                <label class="switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <hr style="border:0; border-top:1px solid var(--border-color); margin: 30px 0;">
+
+            <h2 class="section-title" style="margin-bottom: 20px;">Lecture Schedule</h2>
+            <div
+                style="background: var(--bg-primary); border-radius: 8px; border: 1px solid var(--border-color); overflow: hidden; margin-bottom: 20px;">
+                <table style="width: 100%; text-align: left; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color);">
+                            <th style="padding: 12px; font-size: 0.85rem; color: var(--text-secondary);">Lecture Name
+                            </th>
+                            <th style="padding: 12px; font-size: 0.85rem; color: var(--text-secondary);">Start Time</th>
+                            <th style="padding: 12px; font-size: 0.85rem; color: var(--text-secondary);">End Time</th>
+                            <th style="padding: 12px; font-size: 0.85rem; color: var(--text-secondary);">Late Buffer
+                                (min)</th>
+                            <th style="padding: 12px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lecture-list">
+                        <!-- Rows will be added here -->
+                    </tbody>
+                </table>
+                <div style="padding: 12px; border-top: 1px solid var(--border-color); text-align: center;">
+                    <button type="button" class="btn"
+                        style="background: var(--bg-secondary); border: 1px dashed var(--border-color); width: 100%; color: var(--text-secondary);"
+                        onclick="addLectureRow()">
+                        + Add Lecture
+                    </button>
+                </div>
+            </div>
+
+            <button type="button" class="btn btn-primary" style="width: 100%;" onclick="saveSettings()">Save
+                Schedule</button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+    <style>
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: var(--shadow-card);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+            border-left: 4px solid var(--info);
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-left-width: 4px;
+        }
+
+        .toast.success {
+            border-left-color: var(--success);
+        }
+
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+
+    <script>
+        // Init Page
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Theme Init
+            const toggle = document.getElementById('theme-toggle');
+            toggle.checked = document.documentElement.getAttribute('data-theme') === 'dark';
+
+            toggle.addEventListener('change', (e) => {
+                const theme = e.target.checked ? 'dark' : 'light';
+                document.documentElement.setAttribute('data-theme', theme);
+                localStorage.setItem('theme', theme);
+            });
+
+            // Load Settings
+            loadSettings();
+        });
+
+        async function loadSettings() {
+            try {
+                const res = await fetch('/api/settings');
+                const data = await res.json();
+                if (data.success) {
+                    const s = data.settings;
+                    const lectures = s.lectures || []; // Expecting list of lectures
+
+                    const list = document.getElementById('lecture-list');
+                    list.innerHTML = ''; // Clear current
+
+                    // If no lectures but old format exists, migrate visual
+                    if (lectures.length === 0 && s.start_time) {
+                        addLectureRow("Lecture 1", s.start_time, "10:00", s.late_buffer);
+                    } else {
+                        lectures.forEach(l => addLectureRow(l.name, l.start_time, l.end_time, l.late_buffer));
+                    }
+
+                    if (list.children.length === 0) {
+                        addLectureRow(); // Add empty default
+                    }
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        function addLectureRow(name = "", start = "", end = "", buffer = 15) {
+            const tbody = document.getElementById('lecture-list');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="padding: 8px;"><input type="text" class="schedule-input name" value="${name}" placeholder="e.g. Math 101"></td>
+                <td style="padding: 8px;"><input type="time" class="schedule-input start" value="${start}" required></td>
+                <td style="padding: 8px;"><input type="time" class="schedule-input end" value="${end}" required></td>
+                <td style="padding: 8px;"><input type="number" class="schedule-input buffer" value="${buffer}" min="0" style="width: 80px;"></td>
+                <td style="padding: 8px; text-align: right;">
+                    <button class="btn" style="padding: 4px 8px; color: var(--danger); background: none;" onclick="this.closest('tr').remove()">×</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        async function saveSettings() {
+            const rows = document.querySelectorAll('#lecture-list tr');
+            const lectures = [];
+
+            rows.forEach(row => {
+                const name = row.querySelector('.name').value;
+                const start = row.querySelector('.start').value;
+                const end = row.querySelector('.end').value;
+                const buffer = row.querySelector('.buffer').value;
+
+                if (start && end) {
+                    lectures.push({
+                        name: name || "Lecture",
+                        start_time: start,
+                        end_time: end,
+                        late_buffer: parseInt(buffer) || 0
+                    });
+                }
+            });
+
+            const formData = new FormData();
+            formData.append('lectures', JSON.stringify(lectures));
+
+            try {
+                const res = await fetch('/api/settings', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('Schedule saved successfully', 'success');
+                } else {
+                    showToast('Failed to save settings', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Error saving settings', 'error');
+            }
+        }
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+    </script>
+</body>
+
+</html>

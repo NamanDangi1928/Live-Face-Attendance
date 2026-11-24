@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Smart Attendance</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/modern.css?v=mobileFix2">
+    <script>
+        // Init Theme
+        const storedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', storedTheme);
+    </script>
+    <style>
+        /* UI Enhancements */
+        .camera-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2.5rem !important;
+            margin-bottom: 3rem;
+        }
+
+        .camera-card {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .camera-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            border-color: var(--accent-primary, #23D300);
+        }
+
+        .video-container {
+            border-radius: 16px;
+            overflow: hidden;
+            background: #0f172a;
+            position: relative;
+            aspect-ratio: 16/9;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .no-feed {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            color: #94a3b8;
+            text-align: center;
+            gap: 1rem;
+        }
+
+        .pulse-ring {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .pulse-ring::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 2px solid var(--accent-primary, #23D300);
+            opacity: 0.5;
+            animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+        }
+
+        @keyframes ping {
+
+            75%,
+            100% {
+                transform: scale(2);
+                opacity: 0;
+            }
+        }
+
+        /* Camera Source Toggle */
+        .camera-source-toggle {
+            display: flex;
+            background: var(--bg-tertiary, #f1f5f9);
+            border-radius: 10px;
+            padding: 3px;
+            gap: 2px;
+        }
+
+        .source-btn {
+            padding: 5px 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            background: transparent;
+            color: var(--text-secondary, #64748b);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .source-btn.active {
+            background: white;
+            color: var(--text-primary, #1e293b);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .source-btn:hover:not(.active) {
+            color: var(--text-primary, #1e293b);
+        }
+
+        [data-theme="dark"] .source-btn.active {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .local-video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: none;
+            transform: scaleX(-1);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="bg-pattern"></div>
+
+    <!-- Sidebar Navigation -->
+    <nav class="nav-bar">
+        <div class="nav-logo">
+            <img src="/static/images/logo.svg" alt="Eye-X">
+        </div>
+        <a href="/dashboard" class="nav-link active">
+            <span>Dashboard</span>
+        </a>
+        <a href="/add-students" class="nav-link">
+            <span>Add Students</span>
+        </a>
+        <a href="/analysis" class="nav-link">
+            <span>Analysis</span>
+        </a>
+        <a href="/data" class="nav-link">
+            <span>Data</span>
+        </a>
+        <a href="/settings" class="nav-link">
+            <span>Settings</span>
+        </a>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="page-content">
+        <div class="page-header">
+            <h1 class="page-title">Live Camera Feeds</h1>
+            <p style="color: var(--text-secondary); margin-top: var(--spacing-sm);">
+                Gate: <code>http://[your-ip]:8000/gate</code> &nbsp;|&nbsp;
+                Classroom: <code>http://[your-ip]:8000/classroom</code>
+            </p>
+        </div>
+
+        <div class="stats-grid"
+            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-lg); margin-bottom: var(--spacing-xl);">
+            <!-- Stat Cards -->
+            <div class="stat-card"
+                style="background: var(--bg-secondary); padding: var(--spacing-lg); border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+                <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-xs);">Total
+                    Enrolled</div>
+                <div class="stat-value" id="stat-enrolled" style="font-size: 2rem; font-weight: 700;">-</div>
+            </div>
+
+            <div class="stat-card"
+                style="background: var(--bg-secondary); padding: var(--spacing-lg); border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+                <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-xs);">
+                    Present Today</div>
+                <div class="stat-value" id="stat-present"
+                    style="font-size: 2rem; font-weight: 700; color: var(--success);">0</div>
+            </div>
+
+            <div class="stat-card"
+                style="background: var(--bg-secondary); padding: var(--spacing-lg); border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+                <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-xs);">Late
+                    Arrivals</div>
+                <div class="stat-value" id="stat-late"
+                    style="font-size: 2rem; font-weight: 700; color: var(--warning);">0</div>
+            </div>
+
+            <div class="stat-card"
+                style="background: var(--bg-secondary); padding: var(--spacing-lg); border-radius: var(--radius-xl); border: 1px solid var(--border-subtle);">
+                <div style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: var(--spacing-xs);">Absent
+                </div>
+                <div class="stat-value" id="stat-absent"
+                    style="font-size: 2rem; font-weight: 700; color: var(--error);">0</div>
+            </div>
+        </div>
+
+        <div class="actions-bar" style="display: flex; gap: var(--spacing-md); margin-bottom: var(--spacing-xl);">
+            <a href="/api/export/daily" target="_blank" class="btn"
+                style="background: var(--bg-tertiary); color: var(--text-primary); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                Export Today's Report
+            </a>
+            <a href="/api/export/monthly" target="_blank" class="btn"
+                style="background: var(--bg-tertiary); color: var(--text-primary); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: 500; display: flex; align-items: center; gap: 8px;">
+                Export Monthly Report
+            </a>
+        </div>
+
+        <div style="display:flex;gap:var(--spacing-md);margin-bottom:var(--spacing-lg);">
+            <button id="alarm-toggle" onclick="toggleAlarm()"
+                style="background:var(--bg-tertiary);color:var(--text-primary);padding:8px 16px;border-radius:8px;border:none;font-weight:500;cursor:pointer;">Alarm: ON</button>
+            <button onclick="triggerAlarm(true)"
+                style="background:var(--bg-tertiary);color:var(--text-primary);padding:8px 16px;border-radius:8px;border:none;font-weight:500;cursor:pointer;">Test alarm</button>
+        </div>
+
+        <div class="camera-grid">
+            <!-- Gate Camera -->
+            <div class="camera-card">
+                <div class="camera-card-header">
+                    <div class="camera-card-title">
+                        <span class="status-dot offline" id="gate-status"></span>
+                        Gate Camera
+                    </div>
+                    <div class="camera-source-toggle">
+                        <button class="source-btn active" id="gate-mobile-btn" onclick="switchSource('gate','mobile')">
+                            Mobile</button>
+                        <button class="source-btn" id="gate-laptop-btn" onclick="switchSource('gate','laptop')">
+                            Laptop</button>
+                    </div>
+                    <span id="gate-face-count"> 0 Faces</span>
+                </div>
+                <div class="video-container" id="gate-feed">
+                    <!-- Server annotated snapshot -->
+                    <img id="gate-snapshot" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+                    <!-- Local laptop webcam video -->
+                    <video id="gate-local-video" class="local-video" autoplay playsinline muted></video>
+                    <div class="no-feed" id="gate-placeholder">
+                        <div class="pulse-ring">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" style="color:white;">
+                                <path d="M23 7l-7 5 7 5V7z" />
+                                <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                            </svg>
+                        </div>
+                        <div>
+                            <div style="color: white; font-weight: 600; margin-bottom: 0.25rem;">Signal Lost</div>
+                            <div style="font-size: 0.85rem; opacity: 0.7;">Waiting for gate camera connection...</div>
+                            <div style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--accent-primary, #23D300);">
+                                Open /gate on mobile</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="camera-card-footer">
+                    <span id="gate-mode-label">WebRTC Live Stream</span>
+                </div>
+            </div>
+
+            <!-- Classroom Camera -->
+            <div class="camera-card">
+                <div class="camera-card-header">
+                    <div class="camera-card-title">
+                        <span class="status-dot offline" id="classroom-status"></span>
+                        Classroom Camera
+                    </div>
+                    <span id="classroom-count">0 Students</span>
+                </div>
+                <div class="video-container" id="classroom-feed">
+                    <img id="classroom-snapshot" style="display: none;">
+                    <canvas id="classroom-overlay"></canvas>
+                    <div class="no-feed" id="classroom-placeholder">
+                        <div class="pulse-ring">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" style="color:white;">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        </div>
+                        <div>
+                            <div style="color: white; font-weight: 600; margin-bottom: 0.25rem;">Standby Mode</div>
+                            <div style="font-size: 0.85rem; opacity: 0.7;">Waiting for snapshot interval...</div>
+                            <div style="font-size: 0.75rem; margin-top: 0.5rem; color: var(--accent-primary, #23D300);">
+                                Auto-updates every 10s</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="camera-card-footer">
+                    <span id="classroom-mode-label">High-Quality Snapshots</span>
+                    <span id="classroom-timestamp">--</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="/static/js/webrtc-viewer.js?v=20260201-5"></script>
+    <script>
+        // Dashboard WebSocket & WebRTC Viewer
+        let ws = null;
+        let viewer = null;
+
+        // Local laptop camera state
+        const localState = {
+            gate: { stream: null, frameInterval: null, mode: 'mobile' },
+            classroom: { stream: null, frameInterval: null, mode: 'mobile' }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            connectWebSocket();
+            initViewer();
+        });
+
+        // ----- Camera Source Toggle -----
+        async function switchSource(room, mode) {
+            const state = localState[room];
+            if (state.mode === mode) return;
+            state.mode = mode;
+
+            // Update toggle button UI
+            document.getElementById(`${room}-mobile-btn`).classList.toggle('active', mode === 'mobile');
+            document.getElementById(`${room}-laptop-btn`).classList.toggle('active', mode === 'laptop');
+
+            const localVideo = document.getElementById(`${room}-local-video`);
+            const snapshot = document.getElementById(`${room}-snapshot`);
+            const placeholder = document.getElementById(`${room}-placeholder`);
+
+            if (mode === 'laptop') {
+                // Start laptop webcam
+                try {
+                    state.stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+                        audio: false
+                    });
+                    localVideo.srcObject = state.stream;
+                    localVideo.style.display = 'block';
+                    await localVideo.play();
+
+                    // Hide snapshot / placeholder
+                    if (snapshot) snapshot.style.display = 'none';
+                    if (placeholder) placeholder.style.display = 'none';
+
+                    updateStatus(room, true);
+
+                    // Start sending frames via dashboard WebSocket
+                    startLocalFrameSending(room, localVideo);
+
+                    const label = document.getElementById(`${room}-mode-label`);
+                    if (label) label.textContent = '  Laptop Webcam';
+
+                    showToast(`${room === 'gate' ? 'Gate' : 'Classroom'}: Switched to laptop camera`, 'success');
+                } catch (err) {
+                    showToast('Failed to access laptop camera: ' + err.message, 'error');
+                    // Revert to mobile
+                    switchSource(room, 'mobile');
+                }
+            } else {
+                // Switch back to mobile mode
+                stopLocalCamera(room);
+                localVideo.style.display = 'none';
+                if (placeholder) placeholder.style.display = 'flex';
+
+                const label = document.getElementById(`${room}-mode-label`);
+                if (label) label.textContent = room === 'gate' ? 'WebRTC Live Stream' : 'High-Quality Snapshots';
+
+                showToast(`${room === 'gate' ? 'Gate' : 'Classroom'}: Switched to mobile camera`, 'success');
+            }
+        }
+
+        function startLocalFrameSending(room, videoEl) {
+            const state = localState[room];
+            if (state.frameInterval) clearInterval(state.frameInterval);
+
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const isClassroom = (room === 'classroom');
+            const interval = isClassroom ? 10000 : 200; // classroom: 10s, gate: 5fps
+            const msgType = isClassroom ? 'classroom_snapshot' : 'process_frame';
+
+            state.frameInterval = setInterval(() => {
+                if (!ws || ws.readyState !== WebSocket.OPEN) return;
+                if (videoEl.paused) videoEl.play().catch(() => { });
+
+                try {
+                    canvas.width = 640;
+                    canvas.height = 480;
+                    ctx.drawImage(videoEl, 0, 0, 640, 480);
+                    const dataUrl = canvas.toDataURL('image/jpeg', isClassroom ? 0.9 : 0.4);
+
+                    ws.send(JSON.stringify({
+                        type: msgType,
+                        frame: dataUrl,
+                        timestamp: new Date().toISOString(),
+                        source: 'laptop_dashboard'
+                    }));
+                } catch (e) {
+                    console.error('Frame send error:', e);
+                }
+            }, interval);
+        }
+
+        function stopLocalCamera(room) {
+            const state = localState[room];
+            if (state.frameInterval) {
+                clearInterval(state.frameInterval);
+                state.frameInterval = null;
+            }
+            if (state.stream) {
+                state.stream.getTracks().forEach(t => t.stop());
+                state.stream = null;
+            }
+        }
+
+        // ----- WebSocket -----
+        function connectWebSocket() {
+            const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${protocol}//${location.host}/ws/dashboard`);
+
+            ws.onopen = () => console.log('Dashboard WebSocket connected');
+            ws.onclose = () => {
+                console.log('WebSocket closed, reconnecting...');
+                setTimeout(connectWebSocket, 3000);
+            };
+            ws.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                handleMessage(data);
+            };
+        }
+
+        function handleMessage(data) {
+            switch (data.type) {
+                case 'camera_connected':
+                    updateStatus(data.room, true);
+                    break;
+                case 'camera_disconnected':
+                    updateStatus(data.room, false);
+                    break;
+                case 'face_result':
+                    drawFaceBoxes(data.faces || [], data.frame_width, data.frame_height);
+                    document.getElementById('gate-face-count').textContent =
+                        `   ${data.faces?.length || 0} Face${data.faces?.length !== 1 ? 's' : ''}`;
+                    break;
+                case 'classroom_snapshot':
+                    handleClassroomSnapshot(data);
+                    break;
+                case 'gate_snapshot':
+                    handleGateSnapshot(data);
+                    break;
+                case 'new_attendance':
+                    showToast(`${data.name} marked present!`, 'success');
+                    break;
+                case 'intrusion_alert':
+                    showToast('Unknown person detected!', 'error');
+                    triggerAlarm();
+                    document.getElementById('gate-feed').style.boxShadow = '0 0 20px red';
+                    setTimeout(() => document.getElementById('gate-feed').style.boxShadow = '', 2000);
+                    break;
+            }
+        }
+
+        function updateStatus(room, connected) {
+            const dot = document.getElementById(`${room}-status`);
+            if (dot) dot.className = `status-dot ${connected ? 'online' : 'offline'}`;
+        }
+
+        function handleClassroomSnapshot(data) {
+            // Skip if in laptop mode (we're showing local video)
+            if (localState.classroom.mode === 'laptop') return;
+
+            const img = document.getElementById('classroom-snapshot');
+            const placeholder = document.getElementById('classroom-placeholder');
+            if (img && data.image) {
+                img.src = `data:image/jpeg;base64,${data.image}`;
+                img.style.display = 'block';
+                if (placeholder) placeholder.style.display = 'none';
+            }
+            document.getElementById('classroom-count').textContent = `${data.student_count || 0} Students`;
+            document.getElementById('classroom-timestamp').textContent = new Date().toLocaleTimeString();
+            updateStatus('classroom', true);
+        }
+
+        function handleGateSnapshot(data) {
+            // In laptop mode: show the server's annotated frame (with face boxes)
+            // instead of the raw webcam. This is the processed result.
+            if (localState.gate.mode === 'laptop') {
+                const img = document.getElementById('gate-snapshot');
+                const localVideo = document.querySelector('#gate-feed .local-video');
+                if (img && data.image) {
+                    img.src = `data:image/jpeg;base64,${data.image}`;
+                    img.style.display = 'block';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    // Hide local video, show annotated frame instead
+                    if (localVideo) localVideo.style.display = 'none';
+                    const placeholder = document.getElementById('gate-placeholder');
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+                // Update face count
+                const faceCountEl = document.getElementById('gate-face-count');
+                if (faceCountEl) {
+                    const count = data.face_count || 0;
+                    faceCountEl.textContent = `${count} Face${count !== 1 ? 's' : ''}`;
+                }
+                updateStatus('gate', true);
+                return;
+            }
+
+            const img = document.getElementById('gate-snapshot');
+            const placeholder = document.getElementById('gate-placeholder');
+
+            // Always show the annotated frame (has face boxes drawn by OpenCV)
+            if (img && data.image) {
+                img.src = `data:image/jpeg;base64,${data.image}`;
+                img.style.display = 'block';
+                img.style.width = '100%';
+                img.style.height = '100%';
+                img.style.objectFit = 'cover';
+                if (placeholder) placeholder.style.display = 'none';
+            }
+
+            // Update face count
+            const faceCountEl = document.getElementById('gate-face-count');
+            if (faceCountEl) {
+                const count = data.face_count || 0;
+                faceCountEl.textContent = `${count} Face${count !== 1 ? 's' : ''}`;
+            }
+
+            updateStatus('gate', true);
+        }
+
+        function drawFaceBoxes(faces, frameW = 640, frameH = 480) {
+            const canvas = document.getElementById('gate-overlay');
+            const video = document.getElementById('gate-video');
+
+            if (!canvas) return;
+
+            // Get the video element's display dimensions
+            const displayRect = video.getBoundingClientRect();
+            if (displayRect.width === 0 || displayRect.height === 0) return;
+
+            const ctx = canvas.getContext('2d');
+
+            // Set canvas to match display size
+            canvas.width = displayRect.width;
+            canvas.height = displayRect.height;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Scale from the PROCESSED frame dimensions (frameW, frameH) 
+            // to the DISPLAYED video dimensions
+            const scaleX = displayRect.width / frameW;
+            const scaleY = displayRect.height / frameH;
+
+            faces.forEach(face => {
+                const [fx, fy, fw, fh] = face.bbox;
+
+                const x = fx * scaleX;
+                const y = fy * scaleY;
+                const w = fw * scaleX;
+                const h = fh * scaleY;
+
+                const color = face.status === 'present' ? '#10b981' : '#ef4444';
+
+                // Draw box
+                ctx.strokeStyle = color;
+                ctx.lineWidth = 3;
+                ctx.strokeRect(x, y, w, h);
+
+                // Draw label
+                const label = face.name || 'Unknown';
+                ctx.font = 'bold 14px Inter, sans-serif';
+                const tw = ctx.measureText(label).width;
+                ctx.fillStyle = color;
+                ctx.fillRect(x, y - 24, tw + 12, 22);
+                ctx.fillStyle = 'white';
+                ctx.fillText(label, x + 6, y - 8);
+            });
+        }
+
+        function initViewer() {
+            viewer = new WebRTCViewer({
+                onStreamReceived: (room, stream) => {
+                    if (room === 'gate') {
+                        const video = document.getElementById('gate-video');
+                        const placeholder = document.getElementById('gate-placeholder');
+                        const playBtn = document.getElementById('gate-play-btn');
+
+                        if (video) {
+                            video.srcObject = stream;
+                            video.style.display = 'block';
+
+                            const startPlay = () => {
+                                video.play()
+                                    .then(() => {
+                                        playBtn.style.display = 'none';
+                                    })
+                                    .catch(e => {
+                                        console.error("Autoplay failed:", e);
+                                        playBtn.style.display = 'block';
+                                    });
+                            };
+
+                            startPlay();
+
+                            playBtn.onclick = startPlay;
+                        }
+                        if (placeholder) placeholder.style.display = 'none';
+                        updateStatus('gate', true);
+                    }
+                },
+                onConnectionStateChange: (state, room) => {
+                    if (state === 'camera_disconnected' && room === 'gate') {
+                        const _gv = document.getElementById('gate-video'); if (_gv) _gv.style.display = 'none';
+                        document.getElementById('gate-placeholder').style.display = 'flex';
+                        updateStatus('gate', false);
+                    }
+                }
+            });
+            viewer.start();
+        }
+
+
+        // ===== Unknown-person alarm (free: sound is generated in the browser, no file needed) =====
+        let alarmCtx = null;
+        let alarmEnabled = localStorage.getItem('alarmEnabled') !== 'false';
+        let alarmPlaying = false;
+
+        function getAlarmCtx() {
+            if (!alarmCtx) {
+                const AC = window.AudioContext || window.webkitAudioContext;
+                if (AC) alarmCtx = new AC();
+            }
+            if (alarmCtx && alarmCtx.state === 'suspended') alarmCtx.resume();
+            return alarmCtx;
+        }
+        // Browsers only allow sound after the user has clicked the page once
+        document.addEventListener('click', getAlarmCtx);
+        document.addEventListener('keydown', getAlarmCtx);
+
+        function refreshAlarmButton() {
+            const b = document.getElementById('alarm-toggle');
+            if (b) b.textContent = alarmEnabled ? 'Alarm: ON' : 'Alarm: OFF';
+        }
+        function toggleAlarm() {
+            alarmEnabled = !alarmEnabled;
+            localStorage.setItem('alarmEnabled', alarmEnabled);
+            refreshAlarmButton();
+        }
+
+        function showAlarmBanner() {
+            let banner = document.getElementById('alarm-banner');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'alarm-banner';
+                banner.textContent = 'ALERT: Unknown person detected!';
+                banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;padding:14px;' +
+                    'text-align:center;font-weight:700;color:white;background:#dc2626;' +
+                    'box-shadow:0 4px 20px rgba(220,38,38,.6);';
+                document.body.appendChild(banner);
+            }
+            banner.style.display = 'block';
+            clearTimeout(banner._t);
+            banner._t = setTimeout(() => { banner.style.display = 'none'; }, 4000);
+        }
+
+        function triggerAlarm(force = false) {
+            if (!alarmEnabled && !force) return;
+            showAlarmBanner();
+            if (alarmPlaying) return;
+
+            const ctx = getAlarmCtx();
+            if (!ctx || ctx.state !== 'running') {
+                showToast('Click anywhere on the page once to allow alarm sound', 'error');
+                return;
+            }
+            alarmPlaying = true;
+            const dur = 3;                       // seconds
+            const t0 = ctx.currentTime;
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            for (let i = 0; i < dur / 0.4; i++) {   // siren: two tones alternating
+                osc.frequency.setValueAtTime(i % 2 ? 660 : 880, t0 + i * 0.4);
+            }
+            gain.gain.setValueAtTime(0.25, t0);
+            gain.gain.linearRampToValueAtTime(0, t0 + dur);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.onended = () => { alarmPlaying = false; };
+            osc.start(t0);
+            osc.stop(t0 + dur);
+        }
+        document.addEventListener('DOMContentLoaded', refreshAlarmButton);
+
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            container.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Fetch Stats
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/stats/today');
+                if (!response.ok) return;
+                const data = await response.json();
+
+                document.getElementById('stat-enrolled').textContent = data.enrolled;
+                document.getElementById('stat-present').textContent = data.present;
+                document.getElementById('stat-late').textContent = data.late;
+                document.getElementById('stat-absent').textContent = data.absent;
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+            }
+        }
+
+        // Refresh stats every 3 seconds
+        setInterval(fetchStats, 3000);
+        fetchStats(); // Initial fetch
+    </script>
+</body>
+
+</html>
